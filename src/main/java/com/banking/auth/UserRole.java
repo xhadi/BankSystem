@@ -1,6 +1,6 @@
 package com.banking.auth;
 public enum UserRole {
     ADMIN,
-    USER,
+    MANAGER,
     ENDUSER,
 }
