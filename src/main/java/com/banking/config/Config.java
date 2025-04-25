@@ -6,11 +6,6 @@ public class Config {
     public static final String USERS_FILE = DATA_DIR + "users.csv";
     public static final String ACCOUNTS_FILE = DATA_DIR + "accounts.csv";
 
-    // Role definitions
-    public static final String ROLE_ADMIN = "ADMIN";
-    public static final String ROLE_USER = "USER";
-    public static final String ROLE_MANAGER = "MANAGER";
-
     // Password requirements
     public static final int MIN_PASSWORD_LENGTH = 8;
     // Password must contain at least one lowercase letter, one uppercase letter, one digit, and one special character.
