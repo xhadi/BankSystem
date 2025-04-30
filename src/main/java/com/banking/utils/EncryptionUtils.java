@@ -1,5 +1,4 @@
 package com.banking.utils;
-import com.banking.config.Config;
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.KeyGenerator;
@@ -17,11 +16,9 @@ public class EncryptionUtils {
      * @param key encryption key
      * @throws Exception if encryption fails
      */
-    public static void encryptFile(Key key) throws Exception {
+    public static void encryptFile(String inputFile, String outputFile, Key key) throws Exception {
         Cipher cipher = Cipher.getInstance(TRANSFORMATION);
         cipher.init(Cipher.ENCRYPT_MODE, key);
-        String inputFile = Config.ACCOUNTS_FILE;
-        String outputFile = Config.ACCOUNTS_FILE;
         
         try (FileInputStream inputStream = new FileInputStream(inputFile);
              FileOutputStream outputStream = new FileOutputStream(outputFile)) {
