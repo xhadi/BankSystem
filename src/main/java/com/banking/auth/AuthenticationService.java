@@ -24,7 +24,7 @@ public class AuthenticationService {
         }
 
         boolean isActive = users.get(userIndex).getStatus().equals("active");
-        boolean matchPassword = PasswordUtils.verifyPassword(password, users.get(userIndex).getPassword());
+        boolean matchPassword = verifyPassword(password, users.get(userIndex).getPassword());
 
         if(!isActive) {
             System.out.println("User is not active.");

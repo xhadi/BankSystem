@@ -32,8 +32,10 @@ public class DataAccess {
                 try {
                     // Parse user data from CSV columns
                     String nationalID = nextLine[0];
-                    String fullName = String.format("%s %s %s", nextLine[1], nextLine[2], nextLine[3]);
-                    
+                    String firstName = nextLine[1];
+                    String fatherName = nextLine[2];
+                    String familyName = nextLine[3];
+
                     // Parse date with specific format
                     SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
                     dateFormat.setLenient(false);
@@ -49,7 +51,7 @@ public class DataAccess {
                     String status = nextLine[10];
 
                     // Create and add user to list
-                    User user = new User(nationalID, fullName, dateOfBirth, phoneNumber, 
+                    User user = new User(nationalID, firstName, fatherName, familyName, dateOfBirth, phoneNumber, 
                                        userID, userName, userPassword, userType, status);
                     users.add(user);
                     
@@ -94,7 +96,7 @@ public class DataAccess {
                     user.getNationalID(),
                     user.getFirstName(),
                     user.getFatherName(),
-                    user.getLastName(),
+                    user.getFamilyName(),
                     new SimpleDateFormat("dd-MM-yyyy").format(user.getDateOfBirth()),
                     user.getPhoneNumber(),
                     user.getUserID(),
@@ -105,7 +107,7 @@ public class DataAccess {
                 };
                 writer.writeNext(userData);
             }
-        } 
+        }
         catch (IOException e) {
             System.err.println("Error writing to CSV file: " + e.getMessage());
         }
@@ -225,5 +227,22 @@ public class DataAccess {
             System.err.println("Error appending to CSV file: " + e.getMessage());
             return false;
         }
+    }
+
+    /**
+     * Filters users by their role.
+     * @param users ArrayList<User> containing all users
+     * @param role UserRole to filter by
+     * @param userClass Class type of the user to filter
+     * @return ArrayList<T> containing filtered users
+     */
+    public <T extends User> ArrayList<T> getUsersByRole(ArrayList<User> users, UserRole role, Class<T> userClass) {
+        ArrayList<T> filteredUsers = new ArrayList<>();
+        for (User user : users) {
+            if (user.getUserType() == role) {
+                filteredUsers.add(userClass.cast(user));
+            }
+        }
+        return filteredUsers;
     }
 }
