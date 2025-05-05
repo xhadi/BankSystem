@@ -173,11 +173,18 @@ public class Account {
         this.transactions = transactions;
     }
 
-    public void displayInformations(){
-        System.out.println("----The informations of the account----");
-        System.out.println("Account Number: " + accountNumber);
-        System.out.println("Status: " + status);
-        System.out.println("Balance: $" + balance);
-        System.out.println("Creation Time: " + creationDate);
+    public void displayInformations() {
+        String line = "+-----------------------------------------------+";
+        String format = "| %-18s | %-30s |%n";
+        SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy HH:mm:ss");
+        
+        System.out.println(line);
+        System.out.printf("| %-43s |%n", "ACCOUNT INFORMATION");
+        System.out.println(line);
+        System.out.printf(format, "Account Number", accountNumber);
+        System.out.printf(format, "Status", status);
+        System.out.printf(format, "Balance", String.format("$%.2f", balance));
+        System.out.printf(format, "Creation Time", sdf.format(creationDate));
+        System.out.println(line);
     }
 }
