@@ -72,32 +72,6 @@ public class Manager extends User {
         return false;
     }
 
-    public void activateUserAccount(String accountNumber, ArrayList<Account> allAccounts) {
-        allAccounts.stream()
-                .filter(account -> account.getAccountNumber().equals(accountNumber))
-                .findFirst()
-                .ifPresentOrElse(
-                    account -> {
-                        account.setStatus(AccountStatus.Active);
-                        System.out.println("Account activated successfully!");
-                    },
-                    () -> System.out.println("Account not found.")
-                );
-    }
-
-    public void deactivateUserAccount(String accountNumber, ArrayList<Account> allAccounts) {
-        allAccounts.stream()
-                .filter(account -> account.getAccountNumber().equals(accountNumber))
-                .findFirst()
-                .ifPresentOrElse(
-                    account -> {
-                        account.setStatus(AccountStatus.Inactive);
-                        System.out.println("Account inactivated successfully!");
-                    },
-                    () -> System.out.println("Account not found.")
-                );
-    }
-
     public void resetUserPassword(String nationalID, ArrayList<EndUser> existingUsers, String newPassword) {
         
         if (!ValidationUtils.isValidPassword(newPassword)) {

@@ -63,10 +63,12 @@ public class MainMenu {
                                 Manager managerUser = (Manager) loggedInUser;
                                 ManagerMenu managerMenu = new ManagerMenu();
                                 ArrayList<EndUser> endUsers =  dataAccess.filterUsersByType(exsistingAllUsers, UserRole.ENDUSER, EndUser.class);
-                                managerMenu.handleManagerMenu(managerUser,endUsers);
+                                managerMenu.handleManagerMenu(managerUser,endUsers, dataAccess);
                             break;
                             case ENDUSER:
                                 EndUser endUser = (EndUser) loggedInUser;
+                                UserMenu userMenu = new UserMenu(endUser);
+                                userMenu.handleUserMenu();
                                 
                             break;
                             default:
