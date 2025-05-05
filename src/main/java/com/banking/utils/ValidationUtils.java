@@ -4,7 +4,6 @@ import com.banking.auth.User;
 import com.banking.config.Config;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.regex.Pattern;
 
 public class ValidationUtils {
