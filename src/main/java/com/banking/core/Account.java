@@ -187,4 +187,14 @@ public class Account {
         System.out.printf(format, "Creation Time", sdf.format(creationDate));
         System.out.println(line);
     }
+
+    public void activateAccount() {
+        this.status = AccountStatus.Active;
+        System.out.println("Account " + accountNumber + " activated");
+    }
+    
+    public void deactivateAccount() {
+        this.status = AccountStatus.Inactive;
+        System.out.println("Account " + accountNumber + " deactivated");
+    }
 }
