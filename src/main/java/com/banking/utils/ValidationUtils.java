@@ -3,6 +3,7 @@ package com.banking.utils;
 import com.banking.auth.User;
 import com.banking.config.Config;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -40,7 +41,7 @@ public class ValidationUtils {
      * @param existingUsers list of existing users to check against
      * @return true if valid and unique, false otherwise
      */
-    public static boolean isValidUsername(String username, List<User> existingUsers) {
+    public static boolean isValidUsername(String username, ArrayList<User> existingUsers) {
         if (!Pattern.matches(Config.USERNAME_PATTERN, username)) {
             return false;
         }
@@ -93,29 +94,21 @@ public class ValidationUtils {
     /**
      * Validates national ID matches required pattern
      * @param nationalID national ID to validate
-     * @return true if valid, false otherwise
-     */
-    public static boolean isValidNationalID(String nationalID) {
-        return nationalID != null && Pattern.matches(Config.NATIONAL_ID_PATTERN, nationalID);
-    }
-
-    /**
-     * Validates national ID matches required pattern and is unique
-     * @param nationalID national ID to validate
      * @param existingUsers list of existing users to check against
      * @return true if valid and unique, false otherwise
      */
-    public static boolean isValidNationalID(String nationalID, List<User> existingUsers) {
-        if (nationalID == null || existingUsers == null) {
-            return false;
-        }
-        
-        // First check pattern
+    public static boolean isValidNationalID(String nationalID) {
         if (!Pattern.matches(Config.NATIONAL_ID_PATTERN, nationalID)) {
             return false;
         }
-        
-        // Then check uniqueness
+        return true;
+    }
+
+    public static boolean isUniqeNationalID(String nationalID, ArrayList<User> existingUsers){
+        if(existingUsers == null){
+            return false;
+        }
+
         return existingUsers.stream()
                 .noneMatch(user -> user.getNationalID().equals(nationalID));
     }

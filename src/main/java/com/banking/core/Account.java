@@ -1,20 +1,24 @@
 package com.banking.core;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Random;
 
+import com.banking.core.Transaction.Status;
+
 public class Account {
     private String accountNumber;
-    private String userID;
+    private String nationalID;
     private AccountStatus status;
     private double balance;
     private Date creationDate;
+    private ArrayList<Transaction> transactions;
 
-    /*
+    /**
      * Generates a unique account number based on the current date and a random number
      * @return String unique account number
      */
-    private static String generateAccountNumber() {
+    private String generateAccountNumber() {
         java.text.SimpleDateFormat dateFormat = new java.text.SimpleDateFormat("MMyyyy");
         String datePart = dateFormat.format(new Date());
         
@@ -44,12 +48,13 @@ public class Account {
      * @param userID ID of the user who owns the account
      * @param balance initial balance of the account
      */
-    public Account(String userID, double balance) {
-        this.accountNumber = generateAccountNumber();
-        this.userID = userID;
+    public Account(String nationalID) {
+        accountNumber = generateAccountNumber();
+        this.nationalID = nationalID;
         this.status = AccountStatus.Active;
-        this.balance = balance;
+        this.balance = 0;
         this.creationDate = generateCreationDate();
+        this.transactions = new ArrayList<>();
     }
 
     /**
@@ -59,26 +64,29 @@ public class Account {
      * @param balance initial balance of the account
      * @param status status of the account
      */
-    public Account(String accountNumber, String userID, double balance, AccountStatus accountStatus, Date creationDate){
-        this.accountNumber = accountNumber;
-        this.userID = userID;
+    public Account(String accountnumber, String nationalID, double balance, AccountStatus accountStatus, Date creationDate){
+        accountNumber = accountnumber;
+        this.nationalID = nationalID;
         this.status = accountStatus;
         this.balance = balance;
         this.creationDate = creationDate;
-
+        this.transactions = new ArrayList<Transaction>();
     }
 
-    /*
-     * Deposits money into the account
-     * @param amount the amount to deposit
-     * @return boolean indicating if the deposit was successful or not
-     */
     public boolean deposit(double amount) {
-        if (amount > 0) {
-            this.balance += amount;
-            return true;
+        Deposit deposit = new Deposit(accountNumber, amount);
+        boolean success = deposit.execute(accountNumber,amount);
+        if (!success) {
+            deposit.setStatus(Status.FAILED);
+            transactions.add(deposit);
+            return false;
         }
-        return false;
+        // Add the deposit transaction to the account's transaction history
+        balance += amount;
+        deposit.setStatus(Status.SUCCESS);
+        transactions.add(deposit);
+        deposit.printTransactionConfirmation(this, amount, balance);
+        return true;
     }
 
     /**
@@ -87,11 +95,24 @@ public class Account {
      * @return boolean indicating if the withdrawal was successful or not
      */
     public boolean withdraw(double amount) {
-        if (amount > 0 && this.balance >= amount) {
-            this.balance -= amount;
-            return true;
+        Withdrawal withdrawal = new Withdrawal(accountNumber, amount);
+
+        if (!(amount < balance)) {
+            withdrawal.setStatus(Status.FAILED);
+            transactions.add(withdrawal);
+            return false;
         }
-        return false;
+        boolean success = withdrawal.execute(accountNumber, -amount);
+        if (!success) {
+            withdrawal.setStatus(Status.FAILED);
+            transactions.add(withdrawal);
+            return false;
+        }
+        balance -= amount;
+        withdrawal.setStatus(Status.SUCCESS);
+        transactions.add(withdrawal);
+        withdrawal.printTransactionConfirmation(this, amount, balance);
+        return true;
     }
 
     /**
@@ -101,18 +122,24 @@ public class Account {
      * @return boolean indicating if the transfer was successful
      */
     public boolean transfer(Account targetAccount, double amount) {
-        if (this.withdraw(amount)) {
-            targetAccount.deposit(amount);
-            return true;
+        Transfer transfer = new Transfer(this.getAccountNumber(), targetAccount.getAccountNumber(), amount);
+        if(targetAccount.getAccountStatus() == AccountStatus.Inactive){
+            transfer.setStatus(Status.FAILED);
+            transactions.add(transfer);
+            return false;
         }
-        return false;
+        transfer.execute(getAccountNumber(), targetAccount.getAccountNumber(), amount);
+        transactions.add(transfer);
+        transfer.printTransactionConfirmation(this, targetAccount, amount, balance);
+        return true;
+
     }
 
     public String getAccountNumber() {
         return accountNumber;
     }
-    public String getUserID() {
-        return userID;
+    public String getNationalID() {
+        return nationalID;
     }
     public AccountStatus getAccountStatus() {
         return status;
@@ -130,5 +157,19 @@ public class Account {
 
     public void setStatus(AccountStatus status) {
         this.status = status;
+    }
+    public ArrayList<Transaction> getTransactions() {
+        return transactions;
+    }
+    public void setTransactions(ArrayList<Transaction> transactions) {
+        this.transactions = transactions;
+    }
+
+    public void displayInformations(){
+        System.out.println("----The informations of the account----");
+        System.out.println("Account Number: " + accountNumber);
+        System.out.println("Status: " + status);
+        System.out.println("Balance: $" + balance);
+        System.out.println("Creation Time: " + creationDate);
     }
 }

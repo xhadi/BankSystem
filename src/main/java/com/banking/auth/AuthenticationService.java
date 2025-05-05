@@ -3,41 +3,38 @@ import java.util.ArrayList;
 import org.mindrot.jbcrypt.BCrypt;
 public class AuthenticationService {
     /**
-     * Validates user credentials against the stored user data.
-     * @param users List of users to validate against
-     * @param userName The username to validate
-     * @param password The password to validate
-     * @return true if credentials are valid, false otherwise
+     * Attempts to log in a user with the given credentials
+     * @param <T> Type parameter that extends User class
+     * @param users List of users to check against
+     * @param username The username attempting to log in
+     * @param password The password to verify
+     * @return User object if login successful, null otherwise
      */
-    public static boolean validateCredentials(ArrayList<User> users, String userName, String password) {
-        if (userName == null || password == null) {
-            return false;
+    public static <T extends User> T login(ArrayList<T> users, String nationalID, String password) {
+        if (nationalID == null || password == null || users == null) {
+            System.out.println("Invalid login attempt: Missing input");
+            return null;
         }
 
-        int userIndex = users.indexOf(users.stream()
-                                    .filter(user -> user.getUserName().equals(userName))
-                                    .findFirst()
-                                    .orElse(null));
-
-        if (userIndex == -1) {
-            return false;
-        }
-
-        boolean isActive = users.get(userIndex).getStatus().equals("active");
-        boolean matchPassword = verifyPassword(password, users.get(userIndex).getPassword());
-
-        if(!isActive) {
-            System.out.println("User is not active.");
-            return false;
-        }
-
-        if (!matchPassword) {
-            System.out.println("Invalid password.");
-            return false;
-        }
-
-        System.out.println("User authenticated successfully.");
-        return true;
+        return users.stream()
+                   .filter(user -> user.getNationalID().equals(nationalID))
+                   .findFirst()
+                   .filter(user -> {
+                       if (!user.isActive()) {
+                           System.out.println("Login failed: User is not active");
+                           return false;
+                       }
+                       if (!verifyPassword(password, user.getPassword())) {
+                           System.out.println("Login failed: Invalid password");
+                           return false;
+                       }
+                       System.out.println("Login successful: Welcome " + user.getUsername());
+                       return true;
+                   })
+                   .orElseGet(() -> {
+                       System.out.println("Login failed: User not found");
+                       return null;
+                   });
     }
 
     /**

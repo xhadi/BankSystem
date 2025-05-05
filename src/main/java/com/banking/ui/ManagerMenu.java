@@ -1,5 +1,9 @@
 package com.banking.ui;
 import java.util.Scanner;
+import java.util.ArrayList;
+import com.banking.auth.Manager;
+
+import com.banking.auth.EndUser;
 public class ManagerMenu {
     public void displayManagerMenu() {
         System.out.println("Welcome to the Manager Menu");
@@ -14,10 +18,10 @@ public class ManagerMenu {
         char input;
         // This method will handle user account management
         do{
-            System.out.println("1. View User Account by ID");
-            System.out.println("2. Edit User Accounts by ID");
-            System.out.println("3. Delete User Accounts by ID");
-            System.out.println("4. Reset User Password by ID");
+            System.out.println("1. View User Account");
+            System.out.println("2. Edit User Account");
+            System.out.println("3. Inactive User Account");
+            System.out.println("4. Reset User Password");
             System.out.println("5. Back to Manager Menu");
             System.out.print("Please select an option: ");
             Scanner scanner = new Scanner(System.in);
@@ -42,7 +46,7 @@ public class ManagerMenu {
         }while(input != '5');
     }
 
-    public void handleManagerMenu() {
+    public void handleManagerMenu(Manager managerUser, ArrayList<EndUser> exsistingEndUsers) {
         char input;
         // This method will handle manager input and call the appropriate methods
         do{

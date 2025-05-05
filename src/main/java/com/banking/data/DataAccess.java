@@ -6,7 +6,6 @@ import com.opencsv.*;
 import com.opencsv.exceptions.CsvValidationException;
 import java.util.*;
 import java.io.*;
-import java.lang.reflect.Array;
 import java.text.*;
 public class DataAccess {
     // This class is responsible for data access and storage.
@@ -19,9 +18,7 @@ public class DataAccess {
      * @throws IOException if file reading fails
      * @throws ParseException if date parsing fails
      */
-    public ArrayList<User> loadAllUsers() {
-        ArrayList<User> users = new ArrayList<>();
-        
+    public void loadAllUsers(ArrayList<User> users) {
         
         try (CSVReader reader = new CSVReader(new FileReader(Config.USERS_FILE))) {
             // Skip header row
@@ -42,19 +39,26 @@ public class DataAccess {
                     Date dateOfBirth = dateFormat.parse(nextLine[4]);
                     
                     String phoneNumber = nextLine[5];
-                    String userID = nextLine[6];
                     String userName = nextLine[7];
                     String userPassword = nextLine[8];
                     
                     // Parse user role
                     UserRole userType = UserRole.valueOf(nextLine[9].toUpperCase());
-                    String status = nextLine[10];
-
-                    // Create and add user to list
-                    User user = new User(nationalID, firstName, fatherName, familyName, dateOfBirth, phoneNumber, 
-                                       userID, userName, userPassword, userType, status);
+                    boolean status;
+                    if(nextLine[10].equalsIgnoreCase("active")) {
+                        status = true;
+                    } 
+                    else{
+                            if (nextLine[10].equalsIgnoreCase("inactive")) {
+                            status = false;
+                            } 
+                            else {
+                                throw new IllegalArgumentException("Invalid user status: " + nextLine[10]);
+                            }
+                    }
+                    User user = new User(nationalID, firstName, fatherName, familyName, dateOfBirth, phoneNumber,
+                            userName, userPassword, userType, status);
                     users.add(user);
-                    
                 } 
                 catch (ParseException e) {
                     System.err.println("Error parsing date: " + e.getMessage());
@@ -72,8 +76,6 @@ public class DataAccess {
         catch (CsvValidationException e) {
             System.err.println("Error validating CSV: " + e.getMessage());
         }
-        
-        return users;
     }
 
     /**
@@ -98,12 +100,11 @@ public class DataAccess {
                     user.getFatherName(),
                     user.getFamilyName(),
                     new SimpleDateFormat("dd-MM-yyyy").format(user.getDateOfBirth()),
-                    user.getPhoneNumber(),
-                    user.getUserID(),
-                    user.getUserName(),
+                    user.getPhone(),
+                    user.getUsername(),
                     user.getPassword(),
                     user.getUserType().toString(),
-                    user.getStatus()
+                    user.getStatus() ? "active" : "inactive"
                 };
                 writer.writeNext(userData);
             }
@@ -131,14 +132,14 @@ public class DataAccess {
                 // Parse account data from CSV columns
                 try {
                     String accountNumber = nextLine[0];
-                    String userID = nextLine[1];
+                    String nationalID = nextLine[1];
                     Double balance = Double.parseDouble(nextLine[2]);
                     String status = nextLine[3];
                     AccountStatus accountStatus = AccountStatus.valueOf(status.toUpperCase());
                     Date creationDate = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").parse(nextLine[4]);
                     
                     // Create and add account to list
-                    Account account = new Account(accountNumber, userID, balance, accountStatus, creationDate);
+                    Account account = new Account(accountNumber, nationalID, balance, accountStatus, creationDate);
                     accounts.add(account);
                 } catch (ParseException e) {
                     System.err.println("Error parsing date: " + e.getMessage());
@@ -157,6 +158,23 @@ public class DataAccess {
     }
 
     /**
+     * Filters users by type and returns a list of users of the specified type.
+     * @param users ArrayList<User> containing all users
+     * @param userType UserRole to filter by
+     * @param userClass Class<T> to filter by
+     * @return ArrayList<T> containing users of the specified type
+     */
+    public <T extends User> ArrayList<T> filterUsersByType(ArrayList<User> users, UserRole userType, Class<T> userClass) {
+        ArrayList<T> filteredUsers = new ArrayList<>();
+        for (User user : users) {
+            if (user.getUserType() == userType && userClass.isInstance(user)) {
+                filteredUsers.add(userClass.cast(user));
+            }
+        }
+        return filteredUsers;
+    }
+
+    /**
      * Saves all accounts to the CSV file.
      * @param accounts ArrayList<Account> containing all accounts to save
      * @throws IOException if file writing fails
@@ -171,9 +189,9 @@ public class DataAccess {
             for (Account account : accounts) {
                 String[] accountData = {
                     account.getAccountNumber(),
-                    account.getUserID(),
+                    account.getNationalID(),
                     String.valueOf(account.getBalance()),
-                    account.getAccountStatus(),
+                    account.getAccountStatus().toString(),
                     new SimpleDateFormat("dd-MM-yyyy").format(account.getCreationDate())
                 };
                 writer.writeNext(accountData);
@@ -195,14 +213,13 @@ public class DataAccess {
                 newUser.getNationalID(),
                 newUser.getFirstName(),
                 newUser.getFatherName(),
-                newUser.getLastName(),
+                newUser.getFamilyName(),
                 new SimpleDateFormat("dd-MM-yyyy").format(newUser.getDateOfBirth()),
-                newUser.getPhoneNumber(),
-                newUser.getUserID(),
-                newUser.getUserName(),
+                newUser.getPhone(),
+                newUser.getUsername(),
                 newUser.getPassword(),
                 newUser.getUserType().toString(),
-                newUser.getStatus()
+                newUser.getStatus() ? "active" : "inactive"
             };
             writer.writeNext(userData);
             return true;
@@ -216,7 +233,7 @@ public class DataAccess {
         try (CSVWriter writer = new CSVWriter(new FileWriter(Config.ACCOUNTS_FILE, true))) { // true for append mode
             String[] accountData = {
                 newAccount.getAccountNumber(),
-                newAccount.getUserID(),
+                newAccount.getNationalID(),
                 String.valueOf(newAccount.getBalance()),
                 newAccount.getAccountStatus().toString(),
                 newAccount.getCreationDate().toString()
@@ -228,21 +245,20 @@ public class DataAccess {
             return false;
         }
     }
-
     /**
-     * Filters users by their role.
-     * @param users ArrayList<User> containing all users
-     * @param role UserRole to filter by
-     * @param userClass Class type of the user to filter
-     * @return ArrayList<T> containing filtered users
+     * Updates the account balance in the CSV file
+     * @param accountNumber The account number to update
+     * @param amount The amount to add or subtract
+     * @return boolean indicating if the operation was successful
      */
-    public <T extends User> ArrayList<T> getUsersByRole(ArrayList<User> users, UserRole role, Class<T> userClass) {
-        ArrayList<T> filteredUsers = new ArrayList<>();
-        for (User user : users) {
-            if (user.getUserType() == role) {
-                filteredUsers.add(userClass.cast(user));
+    public void updateAccountBalance(String accountNumber, double amount) {
+        ArrayList<Account> accounts = loadAllAccounts();
+        for (Account account : accounts) {
+            if (account.getAccountNumber().equals(accountNumber)) {
+                account.setBalance(account.getBalance() + amount);
+                break;
             }
         }
-        return filteredUsers;
+        saveAllAccounts(accounts);
     }
 }
