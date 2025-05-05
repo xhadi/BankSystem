@@ -128,11 +128,19 @@ public class Account {
             transactions.add(transfer);
             return false;
         }
-        transfer.execute(getAccountNumber(), targetAccount.getAccountNumber(), amount);
+        boolean success;
+        success = transfer.execute(getAccountNumber(), targetAccount.getAccountNumber(), amount);
+        if(!success){
+            transfer.setStatus(Status.FAILED);
+            transactions.add(transfer);
+            transfer.printTransactionConfirmation(this, targetAccount, amount, amount);
+            return false;
+        }
+
+        transfer.setStatus(Status.SUCCESS);
         transactions.add(transfer);
         transfer.printTransactionConfirmation(this, targetAccount, amount, balance);
         return true;
-
     }
 
     public String getAccountNumber() {
