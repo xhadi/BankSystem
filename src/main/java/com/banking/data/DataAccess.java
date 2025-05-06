@@ -121,37 +121,33 @@ public class DataAccess {
      * @throws IOException if file reading fails
      * @throws ParseException if date parsing fails
      */
-    public ArrayList<Account> loadAllAccounts() {
+    public ArrayList<Account> loadAllAccounts() throws IOException {
         ArrayList<Account> accounts = new ArrayList<>();
         try (CSVReader reader = new CSVReader(new FileReader(Config.ACCOUNTS_FILE))) {
             // Skip header row
             reader.readNext();
-            
+    
             String[] nextLine;
             while ((nextLine = reader.readNext()) != null) {
-                // Parse account data from CSV columns
-                try {
-                    String accountNumber = nextLine[0].trim();
-                    String nationalID = nextLine[1].trim();
-                    Double balance = Double.parseDouble(nextLine[2]);
-                    String status = nextLine[3].trim();
-                    AccountStatus accountStatus = AccountStatus.valueOf(status.toUpperCase());
-                    Date creationDate = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").parse(nextLine[4]);
-                    
-                    // Create and add account to list
-                    Account account = new Account(accountNumber, nationalID, balance, accountStatus, creationDate);
-                    accounts.add(account);
-                } catch (ParseException e) {
-                    System.err.println("Error parsing date: " + e.getMessage());
-                    continue;
-                }
+                String accountNumber = nextLine[0].trim();
+                String nationalID = nextLine[1].trim();
+                Double balance = Double.parseDouble(nextLine[2]);
+                String status = nextLine[3].trim();
+                AccountStatus accountStatus = AccountStatus.valueOf(status.toUpperCase());
+                String creationDate = nextLine[4].trim(); // Directly use String
+                
+                // Create and add account to list
+                Account account = new Account(accountNumber, nationalID, balance, accountStatus, creationDate);
+                accounts.add(account);
             }
         } 
         catch (IOException e) {
             System.err.println("Error reading CSV file: " + e.getMessage());
+            throw e; // Rethrow to maintain exception contract
         } 
         catch (CsvValidationException e) {
             System.err.println("Error validating CSV: " + e.getMessage());
+            throw new IOException("CSV validation failed", e); // Wrap as IOException
         }
         
         return accounts;
@@ -184,7 +180,6 @@ public class DataAccess {
             // Write header
             String[] header = {"Account Number", "National ID", "Balance", "Account Status", "Creation Date"};
             writer.writeNext(header);
-            
             // Write account data
             for (Account account : accounts) {
                 String[] accountData = {
@@ -192,8 +187,8 @@ public class DataAccess {
                     account.getNationalID().trim(),
                     String.valueOf(account.getBalance()).trim(),
                     account.getAccountStatus().toString(),
-                    new SimpleDateFormat("dd-MM-yyyy").format(account.getCreationDate())
-                };
+                    account.getCreationDate()
+                    };
                 writer.writeNext(accountData);
             }
         } 
@@ -250,8 +245,9 @@ public class DataAccess {
      * @param accountNumber The account number to update
      * @param amount The amount to add or subtract
      * @return boolean indicating if the operation was successful
+     * @throws IOException 
      */
-    public void updateAccountBalance(String accountNumber, double amount) {
+    public void updateAccountBalance(String accountNumber, double amount) throws IOException {
         ArrayList<Account> accounts = loadAllAccounts();
         for (Account account : accounts) {
             if (account.getAccountNumber().equals(accountNumber)) {
@@ -274,7 +270,7 @@ public class DataAccess {
                 if(nextLine[1].equals(nationalID)){
                     // Create and add account to list
                     Account account = new Account(nextLine[0], nextLine[1], Double.parseDouble(nextLine[2]), 
-                    AccountStatus.valueOf(nextLine[3].toUpperCase()), new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").parse(nextLine[4]));
+                    AccountStatus.valueOf(nextLine[3].toUpperCase()), nextLine[4]);
                     accounts.add(account);
                 }
             }
@@ -284,9 +280,6 @@ public class DataAccess {
         } 
         catch (CsvValidationException e) {
             System.err.println("Error validating CSV: " + e.getMessage());
-        } 
-        catch (ParseException e) {
-            System.err.println("Error parsing date: " + e.getMessage());
         }
         
         return accounts;

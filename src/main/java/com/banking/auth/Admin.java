@@ -113,7 +113,7 @@ public class Admin extends User {
                 .findFirst()
                 .ifPresentOrElse(
                     account -> {
-                        account.setStatus(AccountStatus.Active);
+                        account.setStatus(AccountStatus.ACTIVE);
                         System.out.println("Account activated successfully!");
                     },
                     () -> System.out.println("Account not found.")
@@ -126,7 +126,7 @@ public class Admin extends User {
                 .findFirst()
                 .ifPresentOrElse(
                     account -> {
-                        account.setStatus(AccountStatus.Inactive);
+                        account.setStatus(AccountStatus.INACTIVE);
                         System.out.println("Account inactivated successfully!");
                     },
                     () -> System.out.println("Account not found.")
