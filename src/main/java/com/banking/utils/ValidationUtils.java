@@ -60,26 +60,33 @@ public class ValidationUtils {
 
     
     public static boolean isValidDateOfBirth(String dateOfBirth) {
-        // Assuming dateOfBirth is in the format "DD-MM-YYYY"
-        String regex = "^(19|20)\\d\\d-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$";
+        // Regex for DD-MM-YYYY format
+        String regex = "^(0[1-9]|[12][0-9]|3[01])-(0[1-9]|1[0-2])-(19|20)\\d\\d$";
         if (!Pattern.matches(regex, dateOfBirth)) {
             return false;
         }
         
         String[] parts = dateOfBirth.split("-");
-        int year = Integer.parseInt(parts[2]);
-        int month = Integer.parseInt(parts[1]);
         int day = Integer.parseInt(parts[0]);
-        int currentYear = java.util.Calendar.getInstance().get(java.util.Calendar.YEAR);
-        int currentMonth = java.util.Calendar.getInstance().get(java.util.Calendar.MONTH) + 1;
-        int currentDay = java.util.Calendar.getInstance().get(java.util.Calendar.DAY_OF_MONTH);
-
-        // Check if the date is valid
-        if (month < 1 || month > 12 || day < 1 || day > 31) {
+        int month = Integer.parseInt(parts[1]);
+        int year = Integer.parseInt(parts[2]);
+        
+        java.util.Calendar now = java.util.Calendar.getInstance();
+        int currentYear = now.get(java.util.Calendar.YEAR);
+        int currentMonth = now.get(java.util.Calendar.MONTH) + 1; // Month is 0-based
+        int currentDay = now.get(java.util.Calendar.DAY_OF_MONTH);
+    
+        // Validate date (e.g., February 30 is invalid)
+        try {
+            java.util.Calendar dob = java.util.Calendar.getInstance();
+            dob.setLenient(false);
+            dob.set(year, month - 1, day); // Month is 0-based in Calendar
+            dob.getTimeInMillis(); // Triggers validation
+        } catch (Exception e) {
             return false;
         }
-
-        // Check if the user is at least 18 years old
+    
+        // Age check
         if (currentYear - year < Config.MIN_AGE) {
             return false;
         } else if (currentYear - year == Config.MIN_AGE) {

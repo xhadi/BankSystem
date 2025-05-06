@@ -39,13 +39,13 @@ public class DataAccess {
                     Date dateOfBirth = dateFormat.parse(nextLine[4]);
                     
                     String phoneNumber = nextLine[5];
-                    String userName = nextLine[7];
-                    String userPassword = nextLine[8];
+                    String userName = nextLine[6];
+                    String userPassword = nextLine[7];
                     
                     // Parse user role
-                    UserRole userType = UserRole.valueOf(nextLine[9].toUpperCase());
+                    UserRole userType = UserRole.valueOf(nextLine[8].toUpperCase());
                     boolean status;
-                    if(nextLine[10].equalsIgnoreCase("active")) {
+                    if(nextLine[9].equalsIgnoreCase("active")) {
                         status = true;
                     } 
                     else{
@@ -88,22 +88,22 @@ public class DataAccess {
         try (CSVWriter writer = new CSVWriter(new FileWriter(Config.USERS_FILE))) {
             // Write header
             String[] header = {"nationalID", "firstName", "fatherName", "lastName", 
-                               "dateOfBirth", "phoneNumber", "userID", "userName", 
+                               "dateOfBirth", "phoneNumber", "userName", 
                                "password", "userType", "status"};
             writer.writeNext(header);
             
             // Write user data
             for (User user : users) {
                 String[] userData = {
-                    user.getNationalID(),
-                    user.getFirstName(),
-                    user.getFatherName(),
+                    user.getNationalID().trim(),
+                    user.getFirstName().trim(),
+                    user.getFatherName().trim(),
                     user.getFamilyName(),
                     new SimpleDateFormat("dd-MM-yyyy").format(user.getDateOfBirth()),
-                    user.getPhone(),
-                    user.getUsername(),
-                    user.getPassword(),
-                    user.getUserType().toString(),
+                    user.getPhone().trim(),
+                    user.getUsername().trim(),
+                    user.getPassword().trim(),
+                    user.getUserType().toString().trim(),
                     user.getStatus() ? "active" : "inactive"
                 };
                 writer.writeNext(userData);
@@ -131,10 +131,10 @@ public class DataAccess {
             while ((nextLine = reader.readNext()) != null) {
                 // Parse account data from CSV columns
                 try {
-                    String accountNumber = nextLine[0];
-                    String nationalID = nextLine[1];
+                    String accountNumber = nextLine[0].trim();
+                    String nationalID = nextLine[1].trim();
                     Double balance = Double.parseDouble(nextLine[2]);
-                    String status = nextLine[3];
+                    String status = nextLine[3].trim();
                     AccountStatus accountStatus = AccountStatus.valueOf(status.toUpperCase());
                     Date creationDate = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").parse(nextLine[4]);
                     
@@ -182,15 +182,15 @@ public class DataAccess {
     public void saveAllAccounts(ArrayList<Account> accounts) {
         try (CSVWriter writer = new CSVWriter(new FileWriter(Config.ACCOUNTS_FILE))) {
             // Write header
-            String[] header = {"accountNumber", "userID", "balance", "accountStatus", "creationDate"};
+            String[] header = {"Account Number", "National ID", "Balance", "Account Status", "Creation Date"};
             writer.writeNext(header);
             
             // Write account data
             for (Account account : accounts) {
                 String[] accountData = {
-                    account.getAccountNumber(),
-                    account.getNationalID(),
-                    String.valueOf(account.getBalance()),
+                    account.getAccountNumber().trim(),
+                    account.getNationalID().trim(),
+                    String.valueOf(account.getBalance()).trim(),
                     account.getAccountStatus().toString(),
                     new SimpleDateFormat("dd-MM-yyyy").format(account.getCreationDate())
                 };
@@ -210,15 +210,15 @@ public class DataAccess {
     public boolean addNewUser(User newUser) {
         try (CSVWriter writer = new CSVWriter(new FileWriter(Config.USERS_FILE, true))) { // true for append mode
             String[] userData = {
-                newUser.getNationalID(),
-                newUser.getFirstName(),
-                newUser.getFatherName(),
-                newUser.getFamilyName(),
+                newUser.getNationalID().trim(),
+                newUser.getFirstName().trim(),
+                newUser.getFatherName().trim(),
+                newUser.getFamilyName().trim(),
                 new SimpleDateFormat("dd-MM-yyyy").format(newUser.getDateOfBirth()),
-                newUser.getPhone(),
-                newUser.getUsername(),
-                newUser.getPassword(),
-                newUser.getUserType().toString(),
+                newUser.getPhone().trim(),
+                newUser.getUsername().trim(),
+                newUser.getPassword().trim(),
+                newUser.getUserType().toString().trim(),
                 newUser.getStatus() ? "active" : "inactive"
             };
             writer.writeNext(userData);
@@ -232,11 +232,11 @@ public class DataAccess {
     public boolean addNewAccount(Account newAccount) {
         try (CSVWriter writer = new CSVWriter(new FileWriter(Config.ACCOUNTS_FILE, true))) { // true for append mode
             String[] accountData = {
-                newAccount.getAccountNumber(),
-                newAccount.getNationalID(),
-                String.valueOf(newAccount.getBalance()),
-                newAccount.getAccountStatus().toString(),
-                newAccount.getCreationDate().toString()
+                newAccount.getAccountNumber().trim(),
+                newAccount.getNationalID().trim(),
+                String.valueOf(newAccount.getBalance()).trim(),
+                newAccount.getAccountStatus().toString().trim(),
+                newAccount.getCreationDate().toString().trim()
             };
             writer.writeNext(accountData);
             return true;
@@ -260,5 +260,35 @@ public class DataAccess {
             }
         }
         saveAllAccounts(accounts);
+    }
+
+    public ArrayList<Account> loadAllAccountsByUserID(String nationalID){
+        ArrayList<Account> accounts = new ArrayList<>();
+        try (CSVReader reader = new CSVReader(new FileReader(Config.ACCOUNTS_FILE))) {
+            // Skip header row
+            reader.readNext();
+            
+            String[] nextLine;
+            while ((nextLine = reader.readNext()) != null) {
+                // Parse account data from CSV columns
+                if(nextLine[1].equals(nationalID)){
+                    // Create and add account to list
+                    Account account = new Account(nextLine[0], nextLine[1], Double.parseDouble(nextLine[2]), 
+                    AccountStatus.valueOf(nextLine[3].toUpperCase()), new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").parse(nextLine[4]));
+                    accounts.add(account);
+                }
+            }
+        } 
+        catch (IOException e) {
+            System.err.println("Error reading CSV file: " + e.getMessage());
+        } 
+        catch (CsvValidationException e) {
+            System.err.println("Error validating CSV: " + e.getMessage());
+        } 
+        catch (ParseException e) {
+            System.err.println("Error parsing date: " + e.getMessage());
+        }
+        
+        return accounts;
     }
 }

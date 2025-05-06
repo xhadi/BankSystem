@@ -51,10 +51,10 @@ public class Account {
     public Account(String nationalID) {
         accountNumber = generateAccountNumber();
         this.nationalID = nationalID;
-        this.status = AccountStatus.Active;
-        this.balance = 0;
-        this.creationDate = generateCreationDate();
-        this.transactions = new ArrayList<>();
+        status = AccountStatus.Active;
+        balance = 0;
+        creationDate = generateCreationDate();
+        transactions = new ArrayList<>();
     }
 
     /**
