@@ -27,8 +27,7 @@ public class User {
     private String password;
     private UserRole userType;
     private Boolean status;
-
-
+    
     public User(){
 
     }
@@ -168,6 +167,7 @@ public class User {
     }
 
     public void viewPersonalInfo() {
+        fullName = String.join(" ", firstName, fatherName, familyName);
         System.out.println("------------- Account Information -------------");
         System.out.printf("%-15s %s%n", "Full Name:", fullName);
         System.out.printf("%-15s %s%n", "Username:", username);
@@ -208,10 +208,12 @@ public class User {
             // Password
             String password = readPassword(reader);
     
-            return new EndUser(
+            EndUser newUser = new EndUser(
                 nationalID, firstName, fatherName, familyName, dateOfBirth,
                 phone, username, AuthenticationService.hashPassword(password)
             );
+            newUser.createAccount();
+            return newUser;
     
         } catch (Exception e) {
             System.err.println("Error creating user: " + e.getMessage());
