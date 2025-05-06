@@ -4,8 +4,8 @@ import com.banking.data.DataAccess;
 import com.banking.utils.ValidationUtils;
 
 import java.io.IOException;
-import java.text.DateFormat;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Scanner;
@@ -28,6 +28,11 @@ public class User {
     private UserRole userType;
     private Boolean status;
 
+
+    public User(){
+
+    }
+    
     public User(String nationalID, String fullName, Date dateOfBirth, String phone,
                 String username, String password, UserRole userType, Boolean status) {
         this.nationalID = nationalID;
@@ -52,6 +57,20 @@ public class User {
         this.password = password;
         this.userType = userType;
         this.status = status;
+    }
+
+    public User(String nationalID, String firstName, String fatherName, String familyName, Date dateOfBirth, String phone,
+                String username, String password) {
+        this.nationalID = nationalID;
+        this.firstName = firstName;
+        this.fatherName = fatherName;
+        this.familyName = familyName;
+        this.dateOfBirth = dateOfBirth;
+        this.phone = phone;
+        this.username = username;
+        this.password = password;
+        userType = UserRole.ENDUSER;
+        this.status = true;
     }
 
     // Getters and Setters
@@ -159,93 +178,93 @@ public class User {
         System.out.println("-----------------------------------------------");
     }
 
-    public static User crateUser(ArrayList<User> exsistingUsers) throws ParseException, IOException {
-        boolean isValid = false;
-        Scanner input = new Scanner(System.in);
-        Terminal terminal = TerminalBuilder.terminal();
-        LineReader reader = LineReaderBuilder.builder()
-                .terminal(terminal)
-                .build();
-
+    public EndUser createUser(LineReader reader, ArrayList<User> existingUsers) {
+        try {
+            System.out.println("\n=== Create New User ===");
+    
+            // National ID
+            String nationalID = readValidatedInput(reader, "Enter national ID: ", 
+                ValidationUtils::isValidNationalID);
+    
+            // Names
+            String firstName = readValidatedInput(reader, "Enter first name: ", 
+                ValidationUtils::isValidName);
+            String fatherName = readValidatedInput(reader, "Enter father name: ", 
+                ValidationUtils::isValidName);
+            String familyName = readValidatedInput(reader, "Enter family name: ", 
+                ValidationUtils::isValidName);
+    
+            // Date of Birth
+            Date dateOfBirth = readValidDate(reader);
+    
+            // Phone Number
+            String phone = readValidatedInput(reader, "Enter phone number: ", 
+                ValidationUtils::isValidPhone);
+    
+            // Username
+            String username = readValidatedInput(reader, "Enter username: ", 
+                input -> ValidationUtils.isValidUsername(input, existingUsers));
+    
+            // Password
+            String password = readPassword(reader);
+    
+            return new EndUser(
+                nationalID, firstName, fatherName, familyName, dateOfBirth,
+                phone, username, AuthenticationService.hashPassword(password)
+            );
+    
+        } catch (Exception e) {
+            System.err.println("Error creating user: " + e.getMessage());
+            return null;
+        }
+    }
+    
+    // Helper Methods
+    private String readValidatedInput(LineReader reader, String prompt, 
+                                      java.util.function.Predicate<String> validator) {
+        String input;
+        do {
+            input = reader.readLine(prompt).trim();
+        } while (!validator.test(input));
+        return input;
+    }
+    
+    private Date readValidDate(LineReader reader) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("dd-MM-yyyy");
+        dateFormat.setLenient(false);
         
-        System.out.print("Enter your national ID: ");
-        String nationalID = input.nextLine();
-        
-        isValid = ValidationUtils.isValidNationalID(nationalID);
-        if(!isValid || !ValidationUtils.isUniqeNationalID(nationalID, exsistingUsers)){
-            System.out.println("Invalid national ID or your account already exists.");
-            input.close();
-            return null;
-        }
-
-        System.out.print("Enter your first name: ");
-        String firstName = input.nextLine();
-        isValid = ValidationUtils.isValidName(firstName);
-        if(!isValid){
-            System.out.println("Invalid first name. Please try again.");
-            input.close();
-            return null;
-        }
-        System.out.print("Enter your father's name: ");
-        String fatherName = input.nextLine();
-        isValid = ValidationUtils.isValidName(fatherName);
-        if(!isValid){
-            System.out.println("Invalid father's name. Please try again.");
-            input.close();
-            return null;
-        }
-        System.out.print("Enter your family name: ");
-        String familyName = input.nextLine();
-        isValid = ValidationUtils.isValidName(familyName);
-        if(!isValid){
-            System.out.println("Invalid family name. Please try again.");
-            input.close();
-            return null;
-        }
-        System.out.print("Enter your date of birth (dd-mm-yyyy): ");
-        String dateOfBirthString = input.nextLine();
-        isValid = ValidationUtils.isValidDateOfBirth(dateOfBirthString);
-        if(!isValid){
-            System.out.println("Invalid date of birth. You must be at least 18 years old.");
-            input.close();
-            return null;
-        }
-        Date dateOfBirth = DateFormat.getDateInstance().parse(dateOfBirthString);
-        
-        System.out.print("Enter your phone number: ");
-        String phone = input.nextLine();
-        isValid = ValidationUtils.isValidPhone(phone);
-        if(!isValid){
-            System.out.println("Invalid phone number. Please try again.");
-            input.close();
-            return null;
-        }
-        
-        System.out.print("Enter your username: ");
-        String username = input.nextLine();
-        isValid = ValidationUtils.isValidUsername(username, exsistingUsers);
-        if(!isValid){
-            System.out.println("Invalid username. Please try again.");
-            input.close();
-            return null;
-        }
-
+        Date date;
+        do {
+            String dateStr = readValidatedInput(reader, "Enter date of birth (dd-MM-yyyy): ", 
+                s -> ValidationUtils.isValidDateOfBirth(s));
+            try {
+                date = dateFormat.parse(dateStr);
+            } catch (ParseException e) {
+                System.out.println("Invalid date format. Please use dd-MM-yyyy");
+                date = null;
+            }
+        } while (date == null);
+        return date;
+    }
+    
+    private String readPassword(LineReader reader) {
         System.out.println("Password requirements:");
-                    System.out.println("- At least 8 characters");
-                    System.out.println("- Contains uppercase and lowercase letters");
-                    System.out.println("- Includes number and special character");
-        String password = reader.readLine("Enter your password: ", '*');
-        isValid = ValidationUtils.isValidPassword(password);
-        if(!isValid){
-            System.out.println("Invalid password.");
-            System.out.println("Ex: AoY@1234");
-            input.close();
-            return null;
-        }
-        String hashedPassword = AuthenticationService.hashPassword(password);
-        input.close();
-        return new User(nationalID, firstName, fatherName, familyName, dateOfBirth, phone,
-                username, hashedPassword, UserRole.ENDUSER, true);
+        System.out.println("- At least 8 characters");
+        System.out.println("- Contains uppercase and lowercase letters");
+        System.out.println("- Includes number and special character");
+        
+        return readValidatedInput(reader, "Enter new password: ", 
+            ValidationUtils::isValidPassword, '*');
+    }
+    
+    private String readValidatedInput(LineReader reader, String prompt, 
+                                      java.util.function.Predicate<String> validator, 
+                                      Character mask) {
+        String input;
+        do {
+            input = reader.readLine(prompt, mask).trim();
+        } while (!validator.test(input));
+        return input;
     }
 
     public void editUserInformation(DataAccess dataAccess,ArrayList<User> existingUsers) throws IOException {

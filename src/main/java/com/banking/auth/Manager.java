@@ -10,6 +10,11 @@ import com.banking.utils.ValidationUtils;
 
 public class Manager extends User {
 
+    public Manager(User user){
+        super(user.getNationalID(), user.getFirstName(), user.getFatherName(), user.getFamilyName(), user.getDateOfBirth(), user.getPhone(),
+        user.getUsername(), user.getPassword(), user.getUserType(), user.getStatus());
+    }
+    
     public Manager(String nationalID, String fullName, Date dateOfBirth, String phone,
                    String username, String password, UserRole userType, Boolean status) {
         super(nationalID, fullName, dateOfBirth, phone, username, password, userType, status);

@@ -1,6 +1,8 @@
 package com.banking.auth;
 import java.util.ArrayList;
 import org.mindrot.jbcrypt.BCrypt;
+
+import com.banking.data.DataAccess;
 public class AuthenticationService {
     /**
      * Attempts to log in a user with the given credentials
@@ -10,31 +12,24 @@ public class AuthenticationService {
      * @param password The password to verify
      * @return User object if login successful, null otherwise
      */
-    public static <T extends User> T login(ArrayList<T> users, String nationalID, String password) {
+    public static User login(ArrayList<User> users, String nationalID, String password, DataAccess dataAccess) {
         if (nationalID == null || password == null || users == null) {
             System.out.println("Invalid login attempt: Missing input");
             return null;
         }
 
-        return users.stream()
-                   .filter(user -> user.getNationalID().equals(nationalID))
-                   .findFirst()
-                   .filter(user -> {
-                       if (!user.isActive()) {
-                           System.out.println("Login failed: User is not active");
-                           return false;
-                       }
-                       if (!verifyPassword(password, user.getPassword())) {
-                           System.out.println("Login failed: Invalid password");
-                           return false;
-                       }
-                       System.out.println("Login successful: Welcome " + user.getUsername());
-                       return true;
-                   })
-                   .orElseGet(() -> {
-                       System.out.println("Login failed: User not found");
-                       return null;
-                   });
+
+        for (User user : users) {
+            if (user.getNationalID().equals(nationalID) && AuthenticationService.verifyPassword(password, user.getPassword())) {
+                return switch (user.getUserType()) {
+                    case ADMIN -> new Admin(user);
+                    case MANAGER -> new Manager(user);
+                    case ENDUSER -> new EndUser(user, dataAccess);
+                    default -> throw new IllegalArgumentException("Invalid user type");
+                };
+            }
+        }
+        return null; // Authentication failed
     }
 
     /**

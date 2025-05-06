@@ -12,6 +12,11 @@ import com.banking.utils.ValidationUtils;
 
 public class Admin extends User {
 
+    public Admin(User user){
+        super(user.getNationalID(), user.getFirstName(), user.getFatherName(), user.getFamilyName(), user.getDateOfBirth(), user.getPhone(),
+        user.getUsername(), user.getPassword(), user.getUserType(), user.getStatus());
+    }
+
     public Admin(String nationalID, String fullName, java.util.Date dateOfBirth, String phone,
                  String username, String password, UserRole userType, Boolean status) {
         super(nationalID, fullName, dateOfBirth, phone, username, password, userType, status);

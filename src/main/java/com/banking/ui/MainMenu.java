@@ -1,96 +1,103 @@
 package com.banking.ui;
 
-import java.util.Scanner;
-
 import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
 import org.jline.terminal.Terminal;
 import org.jline.terminal.TerminalBuilder;
-
 import com.banking.auth.*;
 import com.banking.data.DataAccess;
-
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
 
 public class MainMenu {
-    public void handleMainMenu(DataAccess dataAccess,ArrayList<User> exsistingAllUsers) throws ParseException, IOException {
-        // Main menu for the System
-        // It will display options to the user and handle their input
-        char input;
-        do {
-            displayMenu();
-            Scanner scanner = new Scanner(System.in);
-            input = scanner.nextLine().charAt(0);
-            scanner.close();
+    private Terminal terminal; // Initialize once
+    private LineReader reader; // Reuse for input
 
-            switch (input) {
-                case '1':
-                    User newUser = User.crateUser(exsistingAllUsers);
-                    if (newUser == null) {
-                        System.out.println("Failed to create user. Please try again.");
-                    } 
-                    else {
-                        boolean success = dataAccess.addNewUser(newUser);
-                        if(!success){
-                            System.out.println("Failed to save user data. Please try again.");
-                            return;
-                        }
-                        exsistingAllUsers.add(newUser);
-                        System.out.println("User created successfully.");
-                        System.out.println("You can login to your account.");
-                        }
-                    break;
-                case '2':
-                    Terminal terminal = TerminalBuilder.terminal();
-                    LineReader reader = LineReaderBuilder.builder()
-                    .terminal(terminal)
-                    .build();
+    public MainMenu() throws IOException {
+        try {
+            // Initialize terminal once
+            terminal = TerminalBuilder.builder()
+                .system(true)
+                .jna(true)
+                .build();
+        } catch (IOException e) {
+            // Fallback to dumb terminal if necessary
+            terminal = TerminalBuilder.builder().dumb(true).build();
+        }
+        reader = LineReaderBuilder.builder()
+            .terminal(terminal)
+            .build();
+    }
 
-                    String nationalID = reader.readLine("Enter your national ID: ");
-                    String password = reader.readLine("Enter your password: ", '*');
-                    User loggedInUser = AuthenticationService.login(exsistingAllUsers, nationalID, password);
-                    if (loggedInUser != null) {
+    public void handleMainMenu(DataAccess dataAccess, ArrayList<User> existingUsers) throws ParseException, IOException {
+        try {
+            char input;
+            System.out.println("Welcome to the Banking System");
+            do {
+                displayMenu();
+                // Use JLine's reader for all input (not Scanner)
+                String choice = reader.readLine("Please select an option: ");
+                input = choice.isEmpty() ? ' ' : choice.charAt(0);
 
-                        switch (loggedInUser.getUserType()) {
-                            case ADMIN:
-                                Admin adminUser = (Admin) loggedInUser;
-                                AdminMenu adminMenu = new AdminMenu();
-                                adminMenu.handleAdminMenu(adminUser,exsistingAllUsers, dataAccess);    
-                            break;
-                            case MANAGER:
-                                Manager managerUser = (Manager) loggedInUser;
-                                ManagerMenu managerMenu = new ManagerMenu();
-                                ArrayList<EndUser> endUsers =  dataAccess.filterUsersByType(exsistingAllUsers, UserRole.ENDUSER, EndUser.class);
-                                managerMenu.handleManagerMenu(managerUser,endUsers, dataAccess);
-                            break;
-                            case ENDUSER:
-                                EndUser endUser = (EndUser) loggedInUser;
-                                UserMenu userMenu = new UserMenu(endUser);
-                                userMenu.handleUserMenu();
-                                
-                            break;
-                            default:
-                                System.out.println("Invalid user type. Please contact support.");
+                switch (input) {
+                    case '1' -> {
+                        EndUser newUser = new EndUser();
+                        newUser = newUser.createUser(reader, existingUsers); // Pass reader
+                        if (newUser != null) {
+                            existingUsers.add(newUser);
+                            dataAccess.saveAllUsers(existingUsers);
+                            System.out.println("User created successfully!");
+                        } else {
+                            System.out.println("Failed to create user.");
                         }
                     }
-                    break;
-                case '3':
-                    System.out.println("Exiting the system. Goodbye!");
-                    System.exit(0);
-                    break;
-                default:
-                    System.out.println("Invalid option. Please try again.");
+                    case '2' -> {
+                        String nationalID = reader.readLine("Enter your national ID: ");
+                        // Mask password with '*' every time
+                        String password = reader.readLine("Enter your password: ", '*');
+                        User loggedInUser = AuthenticationService.login(existingUsers, nationalID, password, dataAccess);
+                        if (loggedInUser != null) {
+                            switch (loggedInUser.getUserType()) {
+                                case ADMIN -> {
+                                    Admin adminUser = (Admin) loggedInUser;
+                                    AdminMenu adminMenu = new AdminMenu();
+                                    adminMenu.handleAdminMenu(adminUser, existingUsers, dataAccess);
+                                }
+                                case MANAGER -> {
+                                    Manager managerUser = (Manager) loggedInUser;
+                                    ManagerMenu managerMenu = new ManagerMenu();
+                                    ArrayList<EndUser> endUsers = dataAccess.filterUsersByType(existingUsers, UserRole.ENDUSER, EndUser.class);
+                                    managerMenu.handleManagerMenu(managerUser, endUsers, dataAccess);
+                                }
+                                case ENDUSER -> {
+                                    EndUser endUser = (EndUser) loggedInUser;
+                                    UserMenu userMenu = new UserMenu(endUser);
+                                    userMenu.handleUserMenu(reader); // Pass reader
+                                }
+                                default -> System.out.println("Invalid user type.");
+                            }
+                        } else {
+                            System.out.println("Incorrect National ID or Password");
+                        }
+                    }
+                    case '3' -> {
+                        System.out.println("Exiting the system. Goodbye!");
+                        System.exit(0);
+                    }
+                    default -> System.out.println("Invalid option.");
+                }
+            } while (input != '3');
+        } finally {
+            if (terminal != null) {
+                terminal.close(); // Cleanup terminal
             }
-        } while (input != '3');
+        }
     }
 
     public void displayMenu() {
-        System.out.println("Welcome to the Banking System");
         System.out.println("1. Create new user");
         System.out.println("2. Login");
         System.out.println("3. Exit");
-        System.out.print("Please select an option: ");
     }
 }
