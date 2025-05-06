@@ -98,7 +98,7 @@ public class ManagerMenu {
         } while (input != '5');
     }
 
-    private void viewUserAccount(Manager manager, DataAccess dataAccess) {
+    private void viewUserAccount(Manager manager, DataAccess dataAccess) throws IOException {
         System.out.print("Enter user's national ID: ");
         String nationalID = scanner.nextLine();
         ArrayList<Account> allAccounts = dataAccess.loadAllAccounts();
@@ -181,7 +181,7 @@ public class ManagerMenu {
                 .findFirst()
                 .ifPresentOrElse(
                     account -> {
-                        account.setStatus(AccountStatus.Active);
+                        account.setStatus(AccountStatus.ACTIVE);
                         System.out.println("Account activated successfully!");
                     },
                     () -> System.out.println("Account not found.")
@@ -194,7 +194,7 @@ public class ManagerMenu {
                 .findFirst()
                 .ifPresentOrElse(
                     account -> {
-                        account.setStatus(AccountStatus.Inactive);
+                        account.setStatus(AccountStatus.INACTIVE);
                         System.out.println("Account inactivated successfully!");
                     },
                     () -> System.out.println("Account not found.")

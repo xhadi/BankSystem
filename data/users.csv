@@ -1,2 +1,3 @@
 "nationalID","firstName","fatherName","lastName","dateOfBirth","phoneNumber","userName","password","userType","status"
 "1110000001","Mo","Test","Admin","01-01-1990","+966505258743","1325487","P@ssw0rd","ADMIN","active"
+"1119641361","Hadi","Ali","ALmubarak","03-06-2003","+966534018509","hadi","$2a$10$/2VPHrZb6yG4rcvxhlsZP.9HTrlMdrquWsxSziEwh8IsfDrAGNEiu","ENDUSER","active"

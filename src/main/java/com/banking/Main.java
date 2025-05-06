@@ -14,7 +14,7 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 
 public class Main {
-    private static final String ENCRYPTED_ACCOUNTS_FILE = "accounts.csv.enc";
+    private static final String ENCRYPTED_ACCOUNTS_FILE = "data/accounts.csv.enc";
     private static SecretKey encryptionKey;
 
     public static void main(String[] args) {

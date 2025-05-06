@@ -1,6 +1,8 @@
 package com.banking.ui;
 
 import org.jline.reader.LineReader;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import com.banking.auth.AuthenticationService;
 import com.banking.auth.EndUser;
@@ -21,10 +23,11 @@ public class UserMenu {
         System.out.println("3. Deposit Money");
         System.out.println("4. Withdraw Money");
         System.out.println("5. Transfer Money");
-        System.out.println("6. Logout");
+        System.out.println("6. Create New Account");
+        System.out.println("7. Logout");
     }
 
-    public void handleUserMenu(LineReader reader) {
+    public void handleUserMenu(LineReader reader) throws IOException {
         String input;
         do {
             displayUserMenu();
@@ -58,40 +61,26 @@ public class UserMenu {
                     currentUser.deposit(reader, depositAmount);
                     break;
                 case '4':
-                    handleAmountInput(reader, "withdraw", currentUser::withdrawal);
+                    String withdraw = reader.readLine("Enter withdraw amount: $").trim();
+                    double withdrawAmount = Double.parseDouble(withdraw);
+                    currentUser.withdrawal(reader, withdrawAmount);
                     break;
                 case '5':
                     System.out.print("Enter target account number: ");
                     String targetAccount = reader.readLine().trim();
-                    handleAmountInput(reader, "transfer", amount -> 
-                        currentUser.transfer(targetAccount, amount));
+                    String transfer = reader.readLine("Enter transfer amount: $").trim();
+                    double transferAmount = Double.parseDouble(transfer);
+                    currentUser.transfer(reader, targetAccount, transferAmount);
+                    break;
+                case '7':
+                    System.out.println("Logging out...");
                     break;
                 case '6':
-                    System.out.println("Logging out...");
+                    currentUser.createAccount();
                     break;
                 default:
                     System.out.println("Invalid option. Please try again.");
             }
-        } while (input.charAt(0) != '6');
-    }
-
-    private void handleAmountInput(LineReader reader, String actionName, AmountConsumer action) {
-        String input = reader.readLine("Enter " + actionName + " amount: $").trim();
-        try {
-            double amount = Double.parseDouble(input);
-            if (amount <= 0) {
-                System.out.println("Amount must be positive.");
-                return;
-            }
-            boolean success = action.apply(amount);
-            System.out.println(success ? actionName + " successful." : actionName + " failed.");
-        } catch (NumberFormatException e) {
-            System.out.println("Invalid amount format.");
-        }
-    }
-
-    @FunctionalInterface
-    private interface AmountConsumer {
-        boolean apply(double amount);
+        } while (input.charAt(0) != '7');
     }
 }
