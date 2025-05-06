@@ -188,14 +188,4 @@ public class Account {
         System.out.printf(format, "Creation Time", creationDate); // Direct string usage
         System.out.println(line);
     }
-
-    public void activateAccount() {
-        this.status = AccountStatus.ACTIVE;
-        System.out.println("Account " + accountNumber + " activated");
-    }
-    
-    public void deactivateAccount() {
-        this.status = AccountStatus.INACTIVE;
-        System.out.println("Account " + accountNumber + " deactivated");
-    }
 }

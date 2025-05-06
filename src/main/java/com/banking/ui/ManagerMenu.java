@@ -1,10 +1,6 @@
 package com.banking.ui;
-import java.util.Scanner;
 
 import org.jline.reader.LineReader;
-import org.jline.reader.LineReaderBuilder;
-import org.jline.terminal.Terminal;
-import org.jline.terminal.TerminalBuilder;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -17,23 +13,19 @@ import com.banking.core.AccountStatus;
 import com.banking.utils.ValidationUtils;
 
 public class ManagerMenu {
-    private Scanner scanner;
-
-    public ManagerMenu() {
-        this.scanner = new Scanner(System.in);
-    }
 
     public void displayManagerMenu() {
         System.out.println("\n========== Manager Menu ==========");
         System.out.println("1. View All Users");
         System.out.println("2. Search for User");
         System.out.println("3. Manage User Account");
-        System.out.println("4. Logout");
-        System.out.print("Please select an option: ");
+        System.out.println("4. Edit Your Personal Information");
+        System.out.println("5. Logout");
     }
 
-    public void manageUserAccounts(Manager manager, ArrayList<EndUser> existingEndUsers, DataAccess dataAccess) throws IOException {
-        char input;
+    public void manageUserAccounts(Manager manager, ArrayList<EndUser> existingEndUsers, 
+                                 DataAccess dataAccess, LineReader reader) throws IOException {
+        String input;
         do {
             System.out.println("\n========== Manage User Accounts ==========");
             System.out.println("1. View User Account");
@@ -41,53 +33,22 @@ public class ManagerMenu {
             System.out.println("3. Activate/Deactivate User Account");
             System.out.println("4. Reset User Password");
             System.out.println("5. Back to Manager Menu");
-            System.out.print("Please select an option: ");
-            input = scanner.nextLine().charAt(0);
+            
+            input = reader.readLine("Please select an option: ").trim();
+            if (input.isEmpty()) continue;
 
-            switch (input) {
+            switch (input.charAt(0)) {
                 case '1':
-                    viewUserAccount(manager, dataAccess);
+                    viewUserAccount(manager, dataAccess, reader);
                     break;
                 case '2':
-                    editUserAccount(manager, existingEndUsers, dataAccess);
+                    editUserAccount(manager, existingEndUsers, dataAccess, reader);
                     break;
                 case '3':
-                    viewUserAccount(manager, dataAccess);
-                    System.out.println("1. Activate     2. Deactivate");
-                    input = scanner.nextLine().charAt(0);
-                    String accountNumber;
-                    boolean success;
-                    switch (input) {
-                        case '1':
-                            System.out.print("Enter the account number: ");
-                            accountNumber = scanner.nextLine();
-                            success = ValidationUtils.isValidNationalID(accountNumber);
-                            if(!success){
-                                System.out.println("Invalid National ID.");
-                            }
-                            else{
-                                ArrayList<Account> allAccounts = dataAccess.loadAllAccounts();
-                                activateUserAccount(accountNumber, allAccounts);
-                            }
-                            break;
-                        case '2':
-                            System.out.print("Enter the account number: ");
-                            accountNumber = scanner.nextLine();
-                            success = ValidationUtils.isValidNationalID(accountNumber);
-                            if(!success){
-                                System.out.println("Invalid National ID.");
-                            }
-                            else{
-                                ArrayList<Account> allAccounts = dataAccess.loadAllAccounts();
-                                activateUserAccount(accountNumber, allAccounts);
-                            }
-                            break;
-                        default:
-                            System.out.println("Invalid choice."); 
-                        }
+                    handleAccountActivation(manager, dataAccess, reader);
                     break;
                 case '4':
-                    resetUserPassword(manager, existingEndUsers, dataAccess);
+                    resetUserPassword(manager, existingEndUsers, dataAccess, reader);
                     break;
                 case '5':
                     System.out.println("Returning to Manager Menu...");
@@ -95,12 +56,11 @@ public class ManagerMenu {
                 default:
                     System.out.println("Invalid option. Please try again.");
             }
-        } while (input != '5');
+        } while (input.charAt(0) != '5');
     }
 
-    private void viewUserAccount(Manager manager, DataAccess dataAccess) throws IOException {
-        System.out.print("Enter user's national ID: ");
-        String nationalID = scanner.nextLine();
+    private void viewUserAccount(Manager manager, DataAccess dataAccess, LineReader reader) throws IOException {
+        String nationalID = reader.readLine("Enter user's national ID: ").trim();
         ArrayList<Account> allAccounts = dataAccess.loadAllAccounts();
         ArrayList<Account> userAccounts = manager.searchAccounts(nationalID, allAccounts);
 
@@ -112,9 +72,9 @@ public class ManagerMenu {
         }
     }
 
-    private void editUserAccount(Manager manager, ArrayList<EndUser> existingEndUsers, DataAccess dataAccess) {
-        System.out.print("Enter user's national ID: ");
-        String nationalID = scanner.nextLine();
+    private void editUserAccount(Manager manager, ArrayList<EndUser> existingEndUsers,
+                                DataAccess dataAccess, LineReader reader) {
+        String nationalID = reader.readLine("Enter user's national ID: ").trim();
         User user = manager.searchUser(nationalID, existingEndUsers);
 
         if (user != null) {
@@ -129,33 +89,35 @@ public class ManagerMenu {
         }
     }
 
-    private void resetUserPassword(Manager manager, ArrayList<EndUser> existingEndUsers, DataAccess dataAccess) throws IOException {
-        Terminal terminal = TerminalBuilder.terminal();
-        LineReader reader = LineReaderBuilder.builder()
-                .terminal(terminal)
-                .build();
-        
-        System.out.print("Enter user's national ID: ");
-        String nationalID = scanner.nextLine();
-        String newPassword = reader.readLine("Enter new password: ", '*');
+    private void resetUserPassword(Manager manager, ArrayList<EndUser> existingEndUsers,
+                                  DataAccess dataAccess, LineReader reader) throws IOException {
+        String nationalID = reader.readLine("Enter user's national ID: ").trim();
+        String newPassword = reader.readLine("Enter new password: ", '*').trim();
 
-        manager.resetUserPassword(nationalID, existingEndUsers, newPassword);
-        dataAccess.saveAllUsers(new ArrayList<>(existingEndUsers));
+        if (ValidationUtils.isValidPassword(newPassword)) {
+            manager.resetUserPassword(nationalID, existingEndUsers, newPassword);
+            dataAccess.saveAllUsers(new ArrayList<>(existingEndUsers));
+            System.out.println("Password reset successfully.");
+        } else {
+            System.out.println("Invalid password. Must be 8+ characters with uppercase, lowercase, number, and special character.");
+        }
     }
 
-    public void handleManagerMenu(Manager managerUser, ArrayList<EndUser> existingEndUsers, DataAccess dataAccess) throws IOException {
-        char input;
+    public void handleManagerMenu(Manager managerUser, ArrayList<EndUser> existingEndUsers,
+                                 DataAccess dataAccess, LineReader reader, ArrayList<User> existingUsers) throws IOException {
+        String input;
         do {
             displayManagerMenu();
-            input = scanner.nextLine().charAt(0);
-            switch (input) {
+            input = reader.readLine("Please select an option: ").trim();
+            if (input.isEmpty()) continue;
+
+            switch (input.charAt(0)) {
                 case '1':
                     System.out.println("\n--- All Users ---");
                     existingEndUsers.forEach(User::viewPersonalInfo);
                     break;
                 case '2':
-                    System.out.print("Enter national ID to search: ");
-                    String nationalID = scanner.nextLine();
+                    String nationalID = reader.readLine("Enter national ID to search: ").trim();
                     User user = managerUser.searchUser(nationalID, existingEndUsers);
                     if (user != null) {
                         user.viewPersonalInfo();
@@ -164,18 +126,44 @@ public class ManagerMenu {
                     }
                     break;
                 case '3':
-                    manageUserAccounts(managerUser, existingEndUsers, dataAccess);
+                    manageUserAccounts(managerUser, existingEndUsers, dataAccess, reader);
                     break;
-                case '4':
+                case '5':
                     System.out.println("Logging out...");
                     break;
+                case '4':
+                    managerUser.editPersonalInformation(dataAccess, existingUsers);
                 default:
                     System.out.println("Invalid option. Please try again.");
             }
-        } while (input != '4');
+        } while (input.charAt(0) != '5');
     }
 
-    public void activateUserAccount(String accountNumber, ArrayList<Account> allAccounts) {
+    private void handleAccountActivation(Manager manager, DataAccess dataAccess, LineReader reader) throws IOException {
+        String accountChoice = reader.readLine("1. Activate     2. Deactivate: ").trim();
+        if (accountChoice.isEmpty()) return;
+
+        String accountNumber = reader.readLine("Enter the account number: ").trim();
+        if (!ValidationUtils.isValidAccountNumber(accountNumber)) {
+            System.out.println("Invalid account number.");
+            return;
+        }
+
+        ArrayList<Account> allAccounts = dataAccess.loadAllAccounts();
+        switch (accountChoice.charAt(0)) {
+            case '1':
+                activateUserAccount(accountNumber, allAccounts);
+                break;
+            case '2':
+                deactivateUserAccount(accountNumber, allAccounts);
+                break;
+            default:
+                System.out.println("Invalid choice.");
+        }
+        dataAccess.saveAllAccounts(allAccounts);
+    }
+
+    private void activateUserAccount(String accountNumber, ArrayList<Account> allAccounts) {
         allAccounts.stream()
                 .filter(account -> account.getAccountNumber().equals(accountNumber))
                 .findFirst()
@@ -188,14 +176,14 @@ public class ManagerMenu {
                 );
     }
 
-    public void deactivateUserAccount(String accountNumber, ArrayList<Account> allAccounts) {
+    private void deactivateUserAccount(String accountNumber, ArrayList<Account> allAccounts) {
         allAccounts.stream()
                 .filter(account -> account.getAccountNumber().equals(accountNumber))
                 .findFirst()
                 .ifPresentOrElse(
                     account -> {
                         account.setStatus(AccountStatus.INACTIVE);
-                        System.out.println("Account inactivated successfully!");
+                        System.out.println("Account deactivated successfully!");
                     },
                     () -> System.out.println("Account not found.")
                 );

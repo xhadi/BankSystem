@@ -1,3 +1,5 @@
 "nationalID","firstName","fatherName","lastName","dateOfBirth","phoneNumber","userName","password","userType","status"
 "1110000001","Mo","Test","Admin","01-01-1990","+966505258743","1325487","P@ssw0rd","ADMIN","active"
-"1119641361","Hadi","Ali","ALmubarak","03-06-2003","+966534018509","hadi","$2a$10$/2VPHrZb6yG4rcvxhlsZP.9HTrlMdrquWsxSziEwh8IsfDrAGNEiu","ENDUSER","active"
+"1119641361","Hadi","Ali","ALmubarak","03-06-2003","+966534018509","hadi","$2a$10$/2VPHrZb6yG4rcvxhlsZP.9HTrlMdrquWsxSziEwh8IsfDrAGNEiu","ADMIN","active"
+"1119641360","Hadi","Ali","Alm","06-03-2003","+966534018509","hodi","$2a$10$2qf7YCGloMummT97yxuN0O1Hbl6/tX.yoRHYKtIlVihVjb1NJPKdS","MANAGER","active"
+"1119641362","Ali","Hadi","Almubarak","06-03-2003","+96653408509","hdoi","$2a$10$RH2MMBp36J1cnmOw/pwG8Ot97dH.8h6o2HZaiNia5b4l8j4CmKgXe","ENDUSER","active"

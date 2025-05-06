@@ -9,6 +9,12 @@ import com.banking.data.DataAccess;
 import com.banking.ui.MainMenu;
 import com.banking.utils.EncryptionUtils;
 import javax.crypto.SecretKey;
+
+import org.jline.reader.LineReader;
+import org.jline.reader.LineReaderBuilder;
+import org.jline.terminal.Terminal;
+import org.jline.terminal.TerminalBuilder;
+
 import java.io.*;
 import java.nio.file.Files;
 import java.util.ArrayList;
@@ -48,8 +54,22 @@ public class Main {
                 }
             }
 
+            try {
+            Terminal terminal = TerminalBuilder.builder()
+                .system(true)
+                .build();
+            
+            LineReader reader = LineReaderBuilder.builder()
+                .terminal(terminal)
+                .build();
+
             MainMenu mainMenu = new MainMenu();
-            mainMenu.handleMainMenu(dataAccess, existingUsers);
+            // Pass reader to main menu handling
+            mainMenu.handleMainMenu(dataAccess, existingUsers, reader, terminal); 
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         } catch (Exception e) {
             System.err.println("Critical error: " + e.getMessage());
