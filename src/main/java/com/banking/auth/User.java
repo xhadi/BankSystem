@@ -389,7 +389,7 @@ public class User {
         this.fullName = String.join(" ", firstName, fatherName, familyName);
     }
 
-    public void editPersonalInformationb(DataAccess dataAccess,ArrayList<User> existingUsers) throws IOException {
+    public void editPersonalInformation(DataAccess dataAccess,ArrayList<User> existingUsers) throws IOException {
         boolean editing = true;
         boolean changed = false;
 

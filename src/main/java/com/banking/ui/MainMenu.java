@@ -1,9 +1,7 @@
 package com.banking.ui;
 
 import org.jline.reader.LineReader;
-import org.jline.reader.LineReaderBuilder;
 import org.jline.terminal.Terminal;
-import org.jline.terminal.TerminalBuilder;
 import com.banking.auth.*;
 import com.banking.data.DataAccess;
 import java.io.IOException;
@@ -11,26 +9,12 @@ import java.text.ParseException;
 import java.util.ArrayList;
 
 public class MainMenu {
-    private Terminal terminal; // Initialize once
-    private LineReader reader; // Reuse for input
 
-    public MainMenu() throws IOException {
-        try {
-            // Initialize terminal once
-            terminal = TerminalBuilder.builder()
-                .system(true)
-                .jna(true)
-                .build();
-        } catch (IOException e) {
-            // Fallback to dumb terminal if necessary
-            terminal = TerminalBuilder.builder().dumb(true).build();
-        }
-        reader = LineReaderBuilder.builder()
-            .terminal(terminal)
-            .build();
+    public MainMenu(){
+
     }
 
-    public void handleMainMenu(DataAccess dataAccess, ArrayList<User> existingUsers) throws ParseException, IOException {
+    public void handleMainMenu(DataAccess dataAccess, ArrayList<User> existingUsers, LineReader reader, Terminal terminal) throws ParseException, IOException {
         try {
             char input;
             System.out.println("Welcome to the Banking System");
@@ -62,13 +46,13 @@ public class MainMenu {
                                 case ADMIN -> {
                                     Admin adminUser = (Admin) loggedInUser;
                                     AdminMenu adminMenu = new AdminMenu();
-                                    adminMenu.handleAdminMenu(adminUser, existingUsers, dataAccess);
+                                    adminMenu.handleAdminMenu(adminUser, existingUsers, dataAccess, reader);
                                 }
                                 case MANAGER -> {
                                     Manager managerUser = (Manager) loggedInUser;
                                     ManagerMenu managerMenu = new ManagerMenu();
                                     ArrayList<EndUser> endUsers = dataAccess.filterUsersByType(existingUsers, UserRole.ENDUSER, EndUser.class);
-                                    managerMenu.handleManagerMenu(managerUser, endUsers, dataAccess);
+                                    managerMenu.handleManagerMenu(managerUser, endUsers, dataAccess, reader, existingUsers);
                                 }
                                 case ENDUSER -> {
                                     EndUser endUser = (EndUser) loggedInUser;
@@ -89,8 +73,15 @@ public class MainMenu {
                 }
             } while (input != '3');
         } finally {
-            if (terminal != null) {
-                terminal.close(); // Cleanup terminal
+            // Close terminal ONLY when exiting application
+            try {
+                if (terminal != null) {
+                    terminal.close();
+                }
+            } 
+            catch (IOException e) {
+                // Handle exception
+                System.out.println(e);
             }
         }
     }

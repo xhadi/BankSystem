@@ -20,6 +20,9 @@ public class Config {
     public static final String NAME_PATTERN = "^[a-zA-Z]{2,30}$";
     // National ID pattern
     public static final String NATIONAL_ID_PATTERN = "^[0-9]{10}$";
+
+    // Account number pattern
+    public static final String ACCOUNT_NUMBER_PATTERN = "^[0-9]{10}$";
     
     // Minimum age requirement
     public static final int MIN_AGE = 18;

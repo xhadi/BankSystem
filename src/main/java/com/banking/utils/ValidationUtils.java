@@ -118,4 +118,13 @@ public class ValidationUtils {
         return existingUsers.stream()
                 .noneMatch(user -> user.getNationalID().equals(nationalID));
     }
+
+    /**
+     * Validates account number matches required pattern
+     * @param accountNumber account number to validate
+     * @return true if valid, false otherwise
+     */
+    public static boolean isValidAccountNumber(String accountNumber) {
+        return accountNumber != null && Pattern.matches(Config.ACCOUNT_NUMBER_PATTERN, accountNumber);
+    }
 }

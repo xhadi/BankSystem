@@ -1,5 +1,5 @@
 package com.banking.ui;
-import java.util.Scanner;
+import org.jline.reader.LineReader;
 
 import com.banking.utils.ValidationUtils;
 
@@ -7,8 +7,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import com.banking.auth.*;
 import com.banking.data.DataAccess;
+
 public class AdminMenu {
     public void displayAdminMenu() {
+        System.out.println("\nAdmin Menu Options:");
         System.out.println("1. View All Users");
         System.out.println("2. View All Managers");
         System.out.println("3. Search for User or Manager by National ID");
@@ -16,57 +18,48 @@ public class AdminMenu {
         System.out.println("5. Manage Manager Accounts");
         System.out.println("6. Edit Your Personal Information");
         System.out.println("7. Logout");
-        System.out.print("Please select an option: ");
     }
 
-    public void handleAdminMenu(Admin adminUser,ArrayList<User> exsistingAllUsers, DataAccess dataAccess) throws IOException {
-        ArrayList<Manager> exsistingManagers = dataAccess.filterUsersByType(exsistingAllUsers,UserRole.MANAGER,Manager.class);
-        ArrayList<EndUser> exsistingEndUsers = dataAccess.filterUsersByType(exsistingAllUsers,UserRole.ENDUSER,EndUser.class);
+    public void handleAdminMenu(Admin adminUser, ArrayList<User> existingAllUsers, DataAccess dataAccess, LineReader reader) throws IOException {
+        ArrayList<Manager> existingManagers = dataAccess.filterUsersByType(existingAllUsers, UserRole.MANAGER, Manager.class);
+        ArrayList<EndUser> existingEndUsers = dataAccess.filterUsersByType(existingAllUsers, UserRole.ENDUSER, EndUser.class);
         
-        char input;
-        // This method will handle admin input and call the appropriate methods
-        System.out.println("Welcome " + adminUser.getFirstName() + " in the Admin Menu");
-        do{
+        String input;
+        System.out.println("\nWelcome " + adminUser.getFirstName() + " to the Admin Menu");
+        do {
             displayAdminMenu();
-            Scanner scanner = new Scanner(System.in);
-            input = scanner.nextLine().charAt(0);
-            scanner.close();
-            switch (input) {
+            input = reader.readLine("Please select an option: ").trim();
+            
+            switch (input.charAt(0)) {
                 case '1':
-                    // Call method to view all users
-                    adminUser.viewUsersInBatches(exsistingEndUsers, "Users");
+                    adminUser.viewUsersInBatches(existingEndUsers, "Users");
                     break;
                 case '2':
-                    // Call method to view all managers
-                    adminUser.viewUsersInBatches(exsistingManagers, "Managers");
+                    adminUser.viewUsersInBatches(existingManagers, "Managers");
                     break;
                 case '3':
-                    // Call method to search for user or manager
-                    System.out.print("Enter National ID to search: ");
-                    Scanner scanner1 = new Scanner(System.in);
-                    String nationalID = scanner1.nextLine();
+                    String nationalID = reader.readLine("Enter National ID to search: ").trim();
                     boolean isValid = ValidationUtils.isValidNationalID(nationalID);
-                    scanner1.close();
-                    if(!isValid){
+                    if (!isValid) {
                         System.out.println("Invalid national ID. Please try again.");
                         break;
                     }
-                    User user = adminUser.searchUser(nationalID, exsistingAllUsers);
-                    if(user == null || user.getUserType() == UserRole.ADMIN){
+                    User user = adminUser.searchUser(nationalID, existingAllUsers);
+                    if (user == null || user.getUserType() == UserRole.ADMIN) {
                         System.out.println("User not found.");
                         break;
                     }
-                    System.out.println("founded loading information...");
+                    System.out.println("Found user. Loading information...");
                     user.viewPersonalInfo();
                     break;
                 case '4':
-                    manageUserAccounts();
+                    manageUserAccounts(reader);
                     break;
                 case '5':
-                    manageManagerAccounts();
+                    manageManagerAccounts(reader);
                     break;
                 case '6':
-                    adminUser.editPersonalInformationb(dataAccess,exsistingAllUsers);
+                    adminUser.editPersonalInformation(dataAccess, existingAllUsers);
                     break;
                 case '7':
                     System.out.println("Logging out...");
@@ -74,70 +67,75 @@ public class AdminMenu {
                 default:
                     System.out.println("Invalid option. Please try again.");
             }
-        }while(input != '7');
+        } while (input.charAt(0) != '7');
     }
 
-    public void manageUserAccounts() {
-        char input;
-        // This method will handle user account management
-        do{
+    public void manageUserAccounts(LineReader reader) {
+        String input;
+        do {
+            System.out.println("\nUser Account Management:");
             System.out.println("1. View User Account by National ID");
             System.out.println("2. Edit User Accounts by National ID");
             System.out.println("3. Delete User Accounts by National ID");
             System.out.println("4. Reset User Password by National ID");
             System.out.println("5. Back to Main Menu");
-            System.out.print("Please select an option: ");
-            Scanner scanner = new Scanner(System.in);
-            input = scanner.nextLine().charAt(0);
-            scanner.close();
-            switch (input) {
+            
+            input = reader.readLine("Please select an option: ").trim();
+            
+            switch (input.charAt(0)) {
                 case '1':
-                    // Call method to view user accounts
+                    // Implement view user accounts
                     break;
                 case '2':
-                    // Call method to edit user accounts
+                    // Implement edit user accounts
                     break;
                 case '3':
-                    // Call method to delete user accounts
+                    // Implement delete user accounts
                     break;
                 case '4':
-                    System.out.println("Returning to Main Menu...");
+                    // Implement reset password
                     break;
-                default:
-                    System.out.println("Invalid option. Please try again.");
-            }
-        }while(input != '5');
-    }
-
-    public void manageManagerAccounts() {
-        char input;
-        // This method will handle manager account management
-        do{
-            System.out.println("1. View Manager Account by National ID");
-            System.out.println("2. Edit Manager Accounts by National ID");
-            System.out.println("3. Delete Manager Accounts by National ID");
-            System.out.println("4. Reset Manager Password by National ID");
-            System.out.println("5. Back to Main Menu");
-            System.out.print("Please select an option: ");
-            Scanner scanner = new Scanner(System.in);
-            input = scanner.nextLine().charAt(0);
-            scanner.close();
-            switch (input) {
-                case '1':
-                    // Call method to view manager accounts
-                    break;
-                case '2':
-                    // Call method to edit manager accounts
-                    break;
-                case '3':
-                    // Call method to delete manager accounts
-                    break;
-                case '4':
+                case '5':
                     System.out.println("Returning to Admin Menu...");
                     break;
                 default:
                     System.out.println("Invalid option. Please try again.");
             }
-        }while(input != '5');
+        } while (input.charAt(0) != '5');
+    }
+
+    public void manageManagerAccounts(LineReader reader) {
+        String input;
+        do {
+            System.out.println("\nManager Account Management:");
+            System.out.println("1. View Manager Account by National ID");
+            System.out.println("2. Edit Manager Accounts by National ID");
+            System.out.println("3. Delete Manager Accounts by National ID");
+            System.out.println("4. Reset Manager Password by National ID");
+            System.out.println("5. Back to Main Menu");
+            
+            input = reader.readLine("Please select an option: ").trim();
+            if (input.isEmpty()) continue;
+            
+            switch (input.charAt(0)) {
+                case '1':
+                    // Implement view manager accounts
+                    break;
+                case '2':
+                    // Implement edit manager accounts
+                    break;
+                case '3':
+                    // Implement delete manager accounts
+                    break;
+                case '4':
+                    // Implement reset password
+                    break;
+                case '5':
+                    System.out.println("Returning to Admin Menu...");
+                    break;
+                default:
+                    System.out.println("Invalid option. Please try again.");
+            }
+        } while (input.charAt(0) != '5');
     }
 }
