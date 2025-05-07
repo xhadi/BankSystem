@@ -482,4 +482,42 @@ public class User {
             }
         }
     }
+
+    /**
+     * View all users in batches
+     * @param users List of users to view
+     * @throws IOException 
+     */
+    public void viewUsersInBatches(ArrayList<? extends User> users, String userType, LineReader reader) throws IOException {
+        if (users.isEmpty()) {
+            System.out.println("No " + userType + " found.");
+            return;
+        }
+
+        int batchSize = 5;
+        int totalUsers = users.size();
+        int currentIndex = 0;
+
+        while (currentIndex < totalUsers) {
+            System.out.println("\nShowing " + userType + " " + (currentIndex + 1) + 
+                             " to " + Math.min(currentIndex + batchSize, totalUsers) + 
+                             " of " + totalUsers);
+            
+            for (int i = currentIndex; i < Math.min(currentIndex + batchSize, totalUsers); i++) {
+                users.get(i).viewPersonalInfo();
+            }
+
+            if (currentIndex + batchSize >= totalUsers) {
+                break;
+            }
+
+            String response;
+            System.out.print("Press Enter to see more or 'q' to quit: ");
+            response = reader.readLine().trim();
+            if (response.equalsIgnoreCase("q")) {
+                break;
+            }
+            currentIndex += batchSize;
+        }
+    }
 }

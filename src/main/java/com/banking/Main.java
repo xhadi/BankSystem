@@ -24,6 +24,8 @@ public class Main {
     private static SecretKey encryptionKey;
 
     public static void main(String[] args) {
+        Terminal terminal = null;
+        LineReader reader = null;
         try {
             // Initialize encryption
             initializeEncryption();
@@ -41,6 +43,23 @@ public class Main {
                 }
             }));
 
+            try {
+                terminal = TerminalBuilder.builder()
+                        .system(true)
+                        .jna(true)
+                        .build();
+            } catch (IOException e) {
+                // If interactive terminal fails, fall back to a dumb terminal
+                System.out.println("Warning: Interactive terminal not available. Falling back to basic input mode.");
+                terminal = TerminalBuilder.builder()
+                        .dumb(true)
+                        .build();
+            }
+
+            reader = LineReaderBuilder.builder()
+                    .terminal(terminal)
+                    .build();
+            
             // Main application logic
             DataAccess dataAccess = new DataAccess();
             ArrayList<User> existingUsers = new ArrayList<>();
@@ -54,22 +73,9 @@ public class Main {
                 }
             }
 
-            try {
-            Terminal terminal = TerminalBuilder.builder()
-                .system(true)
-                .build();
-            
-            LineReader reader = LineReaderBuilder.builder()
-                .terminal(terminal)
-                .build();
-
             MainMenu mainMenu = new MainMenu();
             // Pass reader to main menu handling
-            mainMenu.handleMainMenu(dataAccess, existingUsers, reader, terminal); 
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+            mainMenu.handleMainMenu(dataAccess, existingUsers, reader, terminal);
 
         } catch (Exception e) {
             System.err.println("Critical error: " + e.getMessage());

@@ -113,8 +113,7 @@ public class ManagerMenu {
 
             switch (input.charAt(0)) {
                 case '1':
-                    System.out.println("\n--- All Users ---");
-                    existingEndUsers.forEach(User::viewPersonalInfo);
+                    managerUser.viewUsersInBatches(existingEndUsers, "User", reader);
                     break;
                 case '2':
                     String nationalID = reader.readLine("Enter national ID to search: ").trim();

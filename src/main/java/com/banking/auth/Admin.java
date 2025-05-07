@@ -3,7 +3,6 @@ package com.banking.auth;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Scanner;
 import java.util.stream.Collectors;
 
 import com.banking.core.Account;
@@ -51,50 +50,6 @@ public class Admin extends User {
                 .filter(user -> user.getNationalID().equals(nationalID))
                 .findFirst()
                 .orElse(null);
-    }
-
-    /**
-     * View all users in batches
-     * @param users List of users to view
-     */
-    public <T extends User> void viewUsersInBatches(ArrayList<T> users, String userType) {
-    final int BATCH_SIZE = 10;
-    int currentIndex = 0;
-    Scanner scanner = new Scanner(System.in);
-    
-    if (users.isEmpty()) {
-        System.out.println("No users found in the system.");
-        scanner.close();
-        return;
-    }
-
-    while (currentIndex < users.size()) {
-        int endIndex = Math.min(currentIndex + BATCH_SIZE, users.size());
-        
-        // Print batch header
-        System.out.println("\n════════════════════ "+userType +" "+ (currentIndex + 1) + 
-                         "-" + endIndex + " of " + users.size() + " ════════════════════");
-        
-        // Print users in current batch
-        for (int i = currentIndex; i < endIndex; i++) {
-            users.get(i).viewPersonalInfo();
-            System.out.println("───────────────────────────────────────────────");
-        }
-        
-        currentIndex = endIndex;
-        
-        // Prompt for continuation
-        if (currentIndex < users.size()) {
-            System.out.print("\nShow next batch? [Press Enter to continue or 'q' to quit]: ");
-            String input = scanner.nextLine().trim();
-            if (input.equalsIgnoreCase("q")) {
-                break;
-            }
-        }
-    }
-    
-    System.out.println("\nUser listing completed.");
-    scanner.close();
     }
 
     public boolean updateAccountDetails(String accountNumber, Account updatedAccount, List<Account> allAccounts) {
@@ -159,21 +114,25 @@ public class Admin extends User {
                 );
     }
 
-    public void resetUserPassword(String nationalID, ArrayList<User> existingUsers, String newPassword) {
+    public <T extends User> boolean resetUserPassword(String nationalID, ArrayList<T> existingUsers, String newPassword) {
         
         if (!ValidationUtils.isValidPassword(newPassword)) {
-            System.out.println("The password invalid, it must be at least 8 characters and include an uppercase letter, a number, and a special character.");
-            return;
+            return false;
         }
-        existingUsers.stream()
-                .filter(user -> user.getNationalID().equals(nationalID))
-                .findFirst()
-                .ifPresentOrElse(
-                    user -> {
-                        user.setPassword(newPassword);
-                        System.out.println("Password reset successfully!");
-                    },
-                    () -> System.out.println("User not found.")
-                );
+        boolean userFound = false;
+        for (T user : existingUsers) {
+            if (user.getNationalID().equals(nationalID)) {
+                user.setPassword(newPassword);
+                userFound = true;
+                break;
+            }
+        }
+        if (userFound) {
+            return true;
+        } 
+        else {
+            System.out.println("User not found.");
+            return false;
+        }
     }
 }

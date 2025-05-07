@@ -72,18 +72,19 @@ public class MainMenu {
                     default -> System.out.println("Invalid option.");
                 }
             } while (input != '3');
-        } finally {
-            // Close terminal ONLY when exiting application
-            try {
-                if (terminal != null) {
-                    terminal.close();
+        } 
+            finally {
+                // Only try to close the terminal if it's interactive and not already closed
+                try {
+                    if (terminal != null && terminal.getType() != null && !terminal.getType().equals("dumb")) {
+                        terminal.close();
+                    }
+                } catch (IOException e) {
+                    // Log the error but don't let it crash the program
+                    System.out.println("Terminal close error (non-critical): " + e.getMessage());
                 }
-            } 
-            catch (IOException e) {
-                // Handle exception
-                System.out.println(e);
             }
-        }
+        
     }
 
     public void displayMenu() {
